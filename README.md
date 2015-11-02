@@ -24,7 +24,6 @@ A simple chat client-server chat tool for homework
     - type: int, 4 bytes
     - len : int, 4 bytes
     - value: any data, 'len' bytes
-    
 - user login:
     - type: 0
     - len: less than 32 bytes
