@@ -30,7 +30,7 @@ int daemonize()
         return (-1);
 
     if ((fd = open("./chatSimple.log", O_APPEND|O_CREAT, 0755)) != -1) {
-    	close(STDIN_FILENO);
+        close(STDIN_FILENO);
         if(dup2(fd, STDOUT_FILENO) < 0) {
             perror("dup2 stdout");
             return (-1);
@@ -59,42 +59,42 @@ void readcb(struct bufferevent *bev, void *ctx)
         char buf[BUFF_MIN_LEN];
         int type;
         int len;
-    	evbuffer_copyout(input,buf,BUFF_MIN_LEN);
-    	type = ntohl(*(int*)buf);
-    	len = ntohl(*(int*)(buf+sizeof(int)));
+        evbuffer_copyout(input,buf,BUFF_MIN_LEN);
+        type = ntohl(*(int*)buf);
+        len = ntohl(*(int*)(buf+sizeof(int)));
         trace printf("bufferevent msg type=%d, len=%d\n", type, len);
 
-    	if (type > MSG_T_MAX) {
-    		msg_response(output,"ERROR: Invalid massage type.");
-    		evbuffer_drain(input,evbuffer_get_length(input));
-    		return;
-    	}
-    	if (len > MSG_MAX_LEN) {
-    		msg_response(output,"ERROR: Invalid massage length.");
-    		evbuffer_drain(input,evbuffer_get_length(input));
-    		return;
-    	}
+        if (type > MSG_T_MAX) {
+            msg_response(output,"ERROR: Invalid massage type.");
+            evbuffer_drain(input,evbuffer_get_length(input));
+            return;
+        }
+        if (len > MSG_MAX_LEN) {
+            msg_response(output,"ERROR: Invalid massage length.");
+            evbuffer_drain(input,evbuffer_get_length(input));
+            return;
+        }
 
-    	if (evbuffer_get_length(input) >= BUFF_MIN_LEN + len) {
-			MSG *msg = msg_create(type,len, NULL, 0);
-			if (msg == NULL) {
-				msg_response(output,"ERROR: OOM.");
-				evbuffer_drain(input,evbuffer_get_length(input));
-				return;
-			}
-			msg->t = type;
-			msg->l = len;
-			evbuffer_drain(input, BUFF_MIN_LEN);
-			evbuffer_remove(input, msg->p, len);
+        if (evbuffer_get_length(input) >= BUFF_MIN_LEN + len) {
+            MSG *msg = msg_create(type,len, NULL, 0);
+            if (msg == NULL) {
+                msg_response(output,"ERROR: OOM.");
+                evbuffer_drain(input,evbuffer_get_length(input));
+                return;
+            }
+            msg->t = type;
+            msg->l = len;
+            evbuffer_drain(input, BUFF_MIN_LEN);
+            evbuffer_remove(input, msg->p, len);
 
-			procmsg_main(msg, bev, ctx);
-			msg_free(&msg);
-    	} else {
-    		/* wait for the whole msg.*/
-    		trace printf("wait for msg. type %d, curr len=%d, wait len = %d\n",
-    				type,(int)evbuffer_get_length(input), BUFF_MIN_LEN + len);
-    		break;
-    	}
+            procmsg_main(msg, bev, ctx);
+            msg_free(&msg);
+        } else {
+            /* wait for the whole msg.*/
+            trace printf("wait for msg. type %d, curr len=%d, wait len = %d\n",
+                    type,(int)evbuffer_get_length(input), BUFF_MIN_LEN + len);
+            break;
+        }
     }
 }
 
@@ -103,29 +103,29 @@ void readcb(struct bufferevent *bev, void *ctx)
  */
 void errorcb(struct bufferevent *bev, short error, void *ctx)
 {
-	int fd = bufferevent_getfd(bev);
-	USER *user = user_get(NULL, fd);
+    int fd = bufferevent_getfd(bev);
+    USER *user = user_get(NULL, fd);
     if (error & BEV_EVENT_EOF) {
         /* connection has been closed, do any clean up here */
         /* ... */
-	    trace printf("bufferevent conn BEV_EVENT_EOF. \n");
+        trace printf("bufferevent conn BEV_EVENT_EOF. \n");
 
     } else if (error & BEV_EVENT_ERROR) {
         /* check errno to see what error occurred */
         /* ... */
-	    trace printf("bufferevent conn BEV_EVENT_ERROR. \n");
+        trace printf("bufferevent conn BEV_EVENT_ERROR. \n");
 
     } else if (error & BEV_EVENT_TIMEOUT) {
         /* must be a timeout event handle, handle it */
         /* ... */
-	    trace printf("bufferevent conn BEV_EVENT_TIMEOUT. \n");
+        trace printf("bufferevent conn BEV_EVENT_TIMEOUT. \n");
     }
     trace printf("bufferevent error. %d\n", error);
     if (user) {
-    	user->online = 0;
-    	user->intput = NULL;
-    	user->output = NULL;
-    	user->bev	 = NULL;
+        user->online = 0;
+        user->intput = NULL;
+        user->output = NULL;
+        user->bev    = NULL;
     }
 
     bufferevent_free(bev);
@@ -205,28 +205,28 @@ int create_socket(int port) {
  * 3. debug: print debug information
  */
 int main (int argc, char *argv[]) {
-	int listener;
+    int listener;
     struct event *listener_event;
     int port = 3333;
 
     if (argc > 1) {
-    	port = atoi(argv[1]);
+        port = atoi(argv[1]);
         if (port <= 0) {
-        	perror("Invalid port.\n");
-        	exit(0);
+            perror("Invalid port.\n");
+            exit(0);
         }
     }
 
     if (argc > 2 && SAME == strcmp(argv[2],"-d")) {
-    	/*make it a background process*/
-    	daemonize();
-	}
+        /*make it a background process*/
+        daemonize();
+    }
     if (argc > 3 && SAME == strcmp(argv[3],"debug")) {
-    	g_dbg = 1;
-	}
+        g_dbg = 1;
+    }
 
     /* initialize main thread libevent instance */
-	base = event_base_new();
+    base = event_base_new();
     listener = create_socket(port);
 
     listener_event = event_new(base, listener, EV_READ|EV_PERSIST, do_accept, (void*)base);
@@ -235,5 +235,5 @@ int main (int argc, char *argv[]) {
     event_base_dispatch(base);
 
 
-	return 0;
+    return 0;
 }

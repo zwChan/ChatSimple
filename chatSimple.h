@@ -53,25 +53,25 @@ extern int g_dbg;
  * type of message.
  */
 typedef enum MSG_TYPE_tag {
-	MSG_T_LOGIN 	= 0,  	/* user login*/
-	MSG_T_TEXT 		= 1,	/* send text from a user to another user*/
-	MSG_T_FILE		= 2,	/* send a file */
-	MSG_T_RESP		= 3,	/* server responses a simple message to client*/
+    MSG_T_LOGIN     = 0,    /* user login*/
+    MSG_T_TEXT      = 1,    /* send text from a user to another user*/
+    MSG_T_FILE      = 2,    /* send a file */
+    MSG_T_RESP      = 3,    /* server responses a simple message to client*/
 
-	MSG_T_MAX  				/*Keep at the end*/
+    MSG_T_MAX               /*Keep at the end*/
 }MSG_TYPE;
 
 /**
  * user information. a
  */
 typedef struct user_info_tag {
-	struct user_info_tag *next;
-	char name[USERNAME_LEN];
-	int fd;
-	struct bufferevent *bev;
-	struct evbuffer *intput;
-	struct evbuffer *output;
-	int online; 	/* if online or not*/
+    struct user_info_tag *next;
+    char name[USERNAME_LEN];
+    int fd;
+    struct bufferevent *bev;
+    struct evbuffer *intput;
+    struct evbuffer *output;
+    int online;     /* if online or not*/
 } USER;
 
 /**
@@ -81,9 +81,9 @@ typedef struct user_info_tag {
  *Note: all t/l/ value are in network order.
 */
 typedef struct tlv_tag {
-	int _t; /*should not be used directly. use macro tlv_type*/
-	int _l; /*should not be used directly. use macro tlv_len*/
-	char v[1]; /* A pointer to data in msg*/
+    int _t; /*should not be used directly. use macro tlv_type*/
+    int _l; /*should not be used directly. use macro tlv_len*/
+    char v[1]; /* A pointer to data in msg*/
 } TLV;
 #define tlv_type(tlv) ntohl((tlv)->_t)
 #define tlv_len(tlv) ntohl((tlv)->_l)
@@ -97,20 +97,20 @@ typedef struct tlv_tag {
  *Note: any value from msg.p is in network order. other fields is host order.
  */
 typedef struct msg_tag {
-	int t; /*type*/
-	int l; /*length*/
-	int f; /*flag*/
-	int pos; /*current read offset of the value*/
-	char *p;   /*pointer of value*/
+    int t; /*type*/
+    int l; /*length*/
+    int f; /*flag*/
+    int pos; /*current read offset of the value*/
+    char *p;   /*pointer of value*/
 } MSG;
 #define MSG_MAX_LEN (2<<16) /*16K*/
 #define MSG_HEAD_LEN (4+4)  /*type + len*/
 #define BUFF_MIN_LEN MSG_HEAD_LEN
 #define BUFF_MAX_LEN  (MSG_MAX_LEN + MSG_HEAD_LEN)
 /*flag of message*/
-#define MSG_F_PTR_NEW  	(1<<0)   /* msg->p will be freed by msg_free() */
-#define MSG_F_PTR_OLD  	(1<<1)   /* msg->p will not be freed by msg_free() */
-#define MSG_F_PART 		(1<<2)   /* the msg is incomplete, because it is too large*/
+#define MSG_F_PTR_NEW   (1<<0)   /* msg->p will be freed by msg_free() */
+#define MSG_F_PTR_OLD   (1<<1)   /* msg->p will not be freed by msg_free() */
+#define MSG_F_PART      (1<<2)   /* the msg is incomplete, because it is too large*/
 
 
 extern MSG* msg_create(int type, int len, char* v, int flag) ;
