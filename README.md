@@ -41,6 +41,23 @@ A simple chat client-server chat tool for homework
     - len: not tow long
     - value: string
 
+## message
+A message between server and client is a nested TLV struct data. For example, 
+a login message look like:
+```
+[type=0][len=14]{ [type=?][len=6]{jason\0} }
+```
+
+respone message look like:
+```
+[type=3][len=9]{login ok\0}
+```
+
+a text message look like this:
+```
+[type=1][len=23]{ [type=?][len=4]{joe\0} [type=?][len=3]{hi\0} }
+```
+
 ## Example
 ```
 server:
