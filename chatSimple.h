@@ -49,6 +49,9 @@
 extern int g_dbg;
 #define trace if (g_dbg)
 
+#define USER_DIR "./user/"
+#define PATH_LEN 64
+
 /**
  * type of message.
  */
@@ -119,6 +122,9 @@ extern USER* user_get(char *name, int fd);
 extern USER* user_add(char *name);
 extern void procmsg_main(MSG *msg, struct bufferevent *bev, void *ctx);
 extern void msg_free (MSG **msg) ;
-
+extern void user_load(char *dir);
+extern int isPathExist (char *path, int isDirOrFile);
+extern int get_filesize(char *filename) ;
+extern void user_sendOffline(char *name, USER* user);
 
 #endif /* CHATSIMPLE_H_ */

@@ -70,6 +70,8 @@ int main(int argc, char * argv[])
         int len = strlen(argv[3])+1;
         int total = MSG_HEAD_LEN + len;
 
+        sleep(1);
+
         type = ntohl(type);
         total = ntohl(total);
         write(sockfd, &type, 4);
@@ -80,17 +82,21 @@ int main(int argc, char * argv[])
         write(sockfd, &type, 4);
         write(sockfd, &len, 4);
         write(sockfd, argv[3], strlen(argv[3])+1);
-
+        if (errno != 0) {
+        	perror("error on login.\n");
+        }
 
         while (1) {
-            sleep(1);
             printf("*To user: ");
             scanf("%s", username);
 
             printf("*content, a line: ");
             /*scanf("%s", content);*/
             fgets(content, LINE_LEN, stdin);  /*eat a \r\n, ugly, I know.*/
-            if (NULL == fgets(content, LINE_LEN, stdin))break;
+            if (NULL == fgets(content, LINE_LEN, stdin)){
+            	trace printf("fgets get null.\n");
+            	break;
+            }
             content[LINE_LEN-1] = '\0';
 
             type = htonl(MSG_T_TEXT);
@@ -113,6 +119,8 @@ int main(int argc, char * argv[])
                 perror("some thing wrong.\n");
                 exit(0);
             }
+            sleep(1);
+
         }
     } else {
         /* child, for read msg*/
@@ -142,6 +150,7 @@ int main(int argc, char * argv[])
                 len = ntohl(len);
                 read(sockfd, content, len);
                 printf("\n>%s", content);
+                fflush(stdout);
             } else {
                 read(sockfd, content, len);
                 printf(">[unknown] %s\n", content);
@@ -153,5 +162,9 @@ int main(int argc, char * argv[])
         }
     }
 
+
+    if (errno != 0) {
+        perror("some on client wrong.\n");
+    }
     return 0;
 }

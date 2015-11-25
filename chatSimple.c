@@ -122,10 +122,12 @@ void errorcb(struct bufferevent *bev, short error, void *ctx)
     }
     trace printf("bufferevent error. %d\n", error);
     if (user) {
+    	trace printf("socket of user %s error.\n", user->name);
         user->online = 0;
         user->intput = NULL;
         user->output = NULL;
         user->bev    = NULL;
+        user->fd = 0;
     }
 
     bufferevent_free(bev);
@@ -158,7 +160,7 @@ void do_accept(int listener, short event, void *arg)
 /**
  * Create a passive socket to listen the connection from client.
  */
-int create_socket(int port) {
+int create_server_socket(int port) {
     int flags;
     struct sockaddr_in serv_addr;
     int listenfd = 0;
@@ -225,9 +227,12 @@ int main (int argc, char *argv[]) {
         g_dbg = 1;
     }
 
+    /*load user from local*/
+    user_load(USER_DIR);
+
     /* initialize main thread libevent instance */
     base = event_base_new();
-    listener = create_socket(port);
+    listener = create_server_socket(port);
 
     listener_event = event_new(base, listener, EV_READ|EV_PERSIST, do_accept, (void*)base);
     event_add(listener_event, NULL);

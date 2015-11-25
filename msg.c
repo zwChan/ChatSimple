@@ -112,6 +112,7 @@ MSG *msg_get_submsg(MSG *msg) {
     return msg_create(tlv_type(tlv), tlv_len(tlv), tlv->v, MSG_F_PTR_OLD);
 }
 
+
 /**
  *  #################### msg basic operation end ###########
  */
@@ -119,6 +120,27 @@ MSG *msg_get_submsg(MSG *msg) {
 /**
  *  #################### msg callback operation begin ###########
  */
+
+void promsg_send(USER *user, void *buff, int len) {
+	if (user->online) {
+		evbuffer_add(user->output, buff, len);
+	}else{
+		/*open file if it is not open*/
+		if (user->fd <= 0) {
+			char filename[PATH_LEN];
+			sprintf(filename,"%s%s", USER_DIR,user->name);
+			user->fd = open(filename, O_WRONLY);
+			/*write(user->fd,buff,len);*/
+			if (user->fd <= 0) {
+				perror("open user file fail.\n");
+				return;
+			}
+		}
+		write(user->fd,buff,len);
+		trace printf("user %s get off line msg, len %d\n", user->name, len);
+
+	}
+}
 /**
  * user login
  */
@@ -131,7 +153,13 @@ int procmsg_login(MSG *msg, USER *user, void *data) {
     user->online = 1;
     user->intput = input;
     user->output = output;
+    if (user->fd > 0) {
+    	/*close the local file*/
+    	close(user->fd);
+    }
     user->fd = bufferevent_getfd(data);
+
+    user_sendOffline(user->name,user);
 
     trace printf("procmsg_login %s\n", user->name);
 
@@ -154,27 +182,26 @@ int procmsg_text(MSG *msg, USER *user, void *data) {
         return 1;
     }
     if (!toUser->online) {
-        msg_response(user->output, "ERROR: user not online.");
-        return 1;
+        msg_response(user->output, "Warning: user not online, cache on server.");
     }
 
     {
         int type = htonl(MSG_T_TEXT);
         int len = htonl(MSG_HEAD_LEN * 2 + strlen(user->name) + 1 + strlen(content) + 1);
-        evbuffer_add(toUser->output, &type, 4);
-        evbuffer_add(toUser->output, &len, 4);
+        promsg_send(toUser, &type, 4);
+        promsg_send(toUser, &len, 4);
 
         type = htonl(11);
         len = htonl(strlen(user->name) + 1);
-        evbuffer_add(toUser->output, &type, 4);
-        evbuffer_add(toUser->output, &len, 4);
-        evbuffer_add(toUser->output, user->name, ntohl(len));
+        promsg_send(toUser, &type, 4);
+        promsg_send(toUser, &len, 4);
+        promsg_send(toUser, user->name, ntohl(len));
 
         type = htonl(12);
         len = htonl(strlen(content) + 1);
-        evbuffer_add(toUser->output, &type, 4);
-        evbuffer_add(toUser->output, &len, 4);
-        evbuffer_add(toUser->output, content, ntohl(len));
+        promsg_send(toUser,&type, 4);
+        promsg_send(toUser,&len, 4);
+        promsg_send(toUser,content, ntohl(len));
     }
 
     /*msg_response(user->output, "you message have been delivered.");*/
@@ -209,10 +236,13 @@ void procmsg_main(MSG *msg, struct bufferevent *bev, void *ctx) {
     if (msg->t == MSG_T_LOGIN) {
         /* find user or create user*/
         char *name = msg_get_string(msg);
-        user = user_add(name);
+        user = user_get(name,0);
         if (!user) {
-            trace printf("add user fail %s\n", name);
-            return;
+            user = user_add(name);
+            if (!user) {
+            	trace printf("add user fail %s\n", name);
+                return;
+            }
          }
         if (user->online == 1) {
             msg_response(output,"ERROR: user already online.");
