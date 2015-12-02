@@ -126,5 +126,5 @@ extern void user_load(char *dir);
 extern int isPathExist (char *path, int isDirOrFile);
 extern int get_filesize(char *filename) ;
 extern void user_sendOffline(char *name, USER* user);
-
+extern char *strtrim(char *line);
 #endif /* CHATSIMPLE_H_ */

@@ -28,14 +28,18 @@ A simple chat client-server chat tool for homework
     - type: 0
     - len: less than 32 bytes
     - value: one all more tlv, usaully a string tlv for user name.
+    - currently, only one 'username' tlv is used.
 - text message:
     - type: 1
     - len: less than pow(2,16)
     - type: one or more tvl, usaully a string tlv for target user name and a string tlv for content
+    - currently, two tlv 'toUser' and 'content' are used.
 - file message:
     - type: 2
     - len: less than pow(2,31)
     - value: one or more tvl
+    - currently, three tlv 'toUser', 'filename' and 'content' are used. Note, if the length of tlv 'content' is 0,
+      it means the end of the file.
 - server response:
     - type: 3
     - len: not tow long

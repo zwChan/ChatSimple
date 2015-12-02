@@ -174,7 +174,7 @@ int procmsg_text(MSG *msg, USER *user, void *data) {
     USER * toUser;
     toUserName = msg_get_string(msg);
     content = msg_get_string(msg);
-    trace printf("procmsg_text toUser %s, content %s\n", toUserName, content);
+    trace printf("procmsg_text from user %s toUser %s, content %s\n", user->name, toUserName, content);
 
     toUser = user_get(toUserName,0);
     if (!toUser) {
@@ -211,6 +211,48 @@ int procmsg_text(MSG *msg, USER *user, void *data) {
 }
 
 /**
+ *  receive a msg and send to another user
+ */
+int procmsg_file(MSG *msg, USER *user, void *data) {
+    char *toUserName;
+    USER * toUser;
+    toUserName = msg_get_string(msg);
+    trace printf("procmsg_file from user %s toUser %s, len %d\n",user->name, toUserName, msg->l);
+
+    toUser = user_get(toUserName,0);
+    if (!toUser) {
+        msg_response(user->output, "ERROR: user not found.");
+        return 1;
+    }
+    if (!toUser->online) {
+        msg_response(user->output, "Error: user not online, can not send file.");
+        return 1;
+    }
+
+    {
+        int type = htonl(MSG_T_FILE);
+        int len_user = 0;
+        int len_all = htonl(msg->l + strlen(user->name) - strlen(toUser->name));
+        promsg_send(toUser, &type, 4);
+        promsg_send(toUser, &len_all, 4);
+
+        type = htonl(11);
+        len_user = htonl(strlen(user->name) + 1);
+        promsg_send(toUser, &type, 4);
+        promsg_send(toUser, &len_user, 4);
+        promsg_send(toUser, user->name, ntohl(len_user));
+
+        /*forward the reset msg, include file name tlv and content tlv, for now*/
+        promsg_send(toUser,msg->p+msg->pos, ntohl(len_all) - (MSG_HEAD_LEN+ntohl(len_user)));
+    }
+
+    /*msg_response(user->output, "you message have been delivered.");*/
+    trace printf("procmsg_file from %s to %s, len=%d\n", user->name, toUser->name, msg->l);
+
+    return 0;
+}
+
+/**
  *  #################### msg callback operation end ###########
  */
 
@@ -220,6 +262,7 @@ int procmsg_text(MSG *msg, USER *user, void *data) {
 MSG_CB msg_cb[] = {
     {MSG_T_LOGIN,   procmsg_login},
     {MSG_T_TEXT,    procmsg_text},
+    {MSG_T_FILE,    procmsg_file},
 
 };
 
