@@ -35,12 +35,12 @@ int getFileSize (char *path) {
 	struct stat buf;
 	/* should not use lstat, we have to follow the symbol file*/
 	if (stat(path, &buf) <0) {
-		printf("stat %s failed (probably file does not exist).\n", path);
+		/*printf("stat %s failed (probably file does not exist).\n", path);*/
 		return 0;
 	}
 
 	if (S_ISDIR(buf.st_mode)) {
-		printf("not a file: %s", path);
+		/*printf("not a file: %s", path);*/
 		return 0;
 	}
 
@@ -133,6 +133,7 @@ int main(int argc, char * argv[])
         			char buff[4096];
         			int n = 0;
         			char *filename = strtrim(content+strlen(SEND_FILE));
+                	char *filename_nopath=filename+strlen(filename);
         			int filesize;
         			int sentsize=0;
         			int fd = open(filename,O_RDONLY);
@@ -141,6 +142,7 @@ int main(int argc, char * argv[])
         				continue;
         			}
         			filesize = getFileSize(filename);
+        			while(*(filename_nopath-1) != '/' && filename != filename_nopath)filename_nopath--;
 
             		while (1) {
 						n = read(fd, buff,4096);
@@ -155,7 +157,7 @@ int main(int argc, char * argv[])
 
 	        			/*send user name, file name first*/
 	        			type = htonl(MSG_T_FILE);
-						len = htonl(MSG_HEAD_LEN * 3 + strlen(username) + 1 + strlen(filename) + 1 + n);
+						len = htonl(MSG_HEAD_LEN * 3 + strlen(username) + 1 + strlen(filename_nopath) + 1 + n);
 						write(sockfd, &type, 4);
 						write(sockfd, &len, 4);
 
@@ -166,10 +168,10 @@ int main(int argc, char * argv[])
 						write(sockfd, username, ntohl(len));
 
 						type = htonl(33);
-						len = htonl(strlen(filename) + 1);
+						len = htonl(strlen(filename_nopath) + 1);
 						write(sockfd, &type, 4);
 						write(sockfd, &len, 4);
-						write(sockfd, filename, ntohl(len));
+						write(sockfd, filename_nopath, ntohl(len));
 
 						type = htonl(44);
 						len = htonl(n);
