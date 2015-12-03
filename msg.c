@@ -145,10 +145,22 @@ void promsg_send(USER *user, void *buff, int len) {
  * user login
  */
 int procmsg_login(MSG *msg, USER *user, void *data) {
-    struct evbuffer *input = bufferevent_get_input(data);
+    struct evbuffer *input  = bufferevent_get_input(data);
     struct evbuffer *output = bufferevent_get_output(data);
-    msg_response(output, "hello! ");
-    msg_response(output, user->name);
+    static char buff_short[256];
+    static char buff[1024] ;
+    USER *u = g_users;
+    int cnt=0;
+    int userCnt = 0;
+    while (u) {
+        if ( (u->online)) {
+        	userCnt++;
+        	sprintf(buff_short,"Welcome %s online!", user->name);
+        	msg_response(u->output, buff_short);
+        	cnt += sprintf(buff+cnt, "%s,", u->name);
+        }
+        u = u->next;
+    }
 
     user->online = 1;
     user->intput = input;
@@ -158,6 +170,10 @@ int procmsg_login(MSG *msg, USER *user, void *data) {
     	close(user->fd);
     }
     user->fd = bufferevent_getfd(data);
+
+    sprintf(buff_short, "Hello! %s. There are %d users online:[%s]",
+    		user->name, userCnt, buff);
+    msg_response(output,buff_short);
 
     user_sendOffline(user->name,user);
 

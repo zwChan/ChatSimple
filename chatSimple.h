@@ -115,7 +115,7 @@ typedef struct msg_tag {
 #define MSG_F_PTR_OLD   (1<<1)   /* msg->p will not be freed by msg_free() */
 #define MSG_F_PART      (1<<2)   /* the msg is incomplete, because it is too large*/
 
-
+extern USER *g_users;
 extern MSG* msg_create(int type, int len, char* v, int flag) ;
 extern void msg_response(struct evbuffer *output, char *str);
 extern USER* user_get(char *name, int fd);
