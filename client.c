@@ -62,8 +62,8 @@ int main(int argc, char * argv[])
     char username[LINE_LEN] = {0};
     char content[4096*2] = {0};
 
-    if (argc < 3) {
-        printf("Usage: a.out ip_addr port username.\n");
+    if (argc < 4) {
+        printf("Usage: a.out ip_addr port username [debug].\n");
         exit(0);
     }
     if (argc > 4 && SAME == strcmp(argv[4],"debug")) {
