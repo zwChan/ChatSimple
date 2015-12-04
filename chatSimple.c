@@ -123,11 +123,24 @@ void errorcb(struct bufferevent *bev, short error, void *ctx)
     trace printf("bufferevent error. %d\n", error);
     if (user) {
     	trace printf("socket of user %s error.\n", user->name);
+        /*Notify that this user is offline*/
+    	if (user->online) {
+    		USER *u = g_users;
+    		char buff_short[256];
+			while (u) {
+				if ( (u->online)) {
+					sprintf(buff_short,"%s offline", user->name);
+					msg_response(u->output, buff_short);
+				}
+				u = u->next;
+			}
+    	}
         user->online = 0;
         user->intput = NULL;
         user->output = NULL;
         user->bev    = NULL;
         user->fd = 0;
+
     }
 
     bufferevent_free(bev);
