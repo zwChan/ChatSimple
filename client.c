@@ -59,7 +59,8 @@ int main(int argc, char * argv[])
 {
     int sockfd;
     struct sockaddr_in addr;
-    char username[LINE_LEN] = {0};
+    char buff[LINE_LEN] = {0};
+    char *username = buff;
     char content[4096*2] = {0};
 
     if (argc < 4) {
@@ -114,17 +115,18 @@ int main(int argc, char * argv[])
         while (1) {
         	usleep(100000);
             printf("*To user: ");
-            scanf("%s", username);
-
+            fgets(buff,256,stdin);
+            username = strtrim(buff);
             printf("*content, a line: ");
             /*scanf("%s", content);*/
-            fgets(content, LINE_LEN, stdin);  /*eat a \r\n, ugly, I know.*/
+            /*fgets(content, LINE_LEN, stdin); */ /*eat a \r\n, ugly, I know.*/
+            memset(content,0,LINE_LEN);
             if (NULL == fgets(content, LINE_LEN, stdin)){
             	trace printf("fgets get null.\n");
             	break;
             }
             content[LINE_LEN-1] = '\0';
-
+            errno = 0;
             /*sending file*/
 			#define SEND_FILE "send file:"
             {
@@ -207,7 +209,7 @@ int main(int argc, char * argv[])
             write(sockfd, &len, 4);
             write(sockfd, content, ntohl(len));
             if (errno != 0) {
-                perror("some thing wrong.\n");
+                perror("some thing wrong in send msg.\n");
                 exit(0);
             }
 /*            sleep(1);*/
@@ -294,13 +296,14 @@ int main(int argc, char * argv[])
                 perror("\nsome thing wrong.\n");
                 exit(0);
             }
+            printf("\n");
             fflush(stdout);
         }
     }
 
 
     if (errno != 0) {
-        perror("some on client wrong.\n");
+        perror("some on client wrong read msg.\n");
     }
     return 0;
 }
